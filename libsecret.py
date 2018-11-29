@@ -9,16 +9,24 @@ from pydbus import SessionBus
 #   https://github.com/LEW21/pydbus/blob/master/doc/tutorial.rst#accessing-exported-objects
 #   https://specifications.freedesktop.org/secret-service/
 #
-# Maybe in a pinch:
+# For reference on the specific API:
 #   https://lazka.github.io/pgi-docs/Secret-1/classes/Collection.html
+#
+# ... or just open a REPL and start doing things like:
+#   print(bus.get('.secrets').Introspect())
+#   print(bus.get('.secrets', 'collection/session').Introspect())
+#   print(bus.get('.secrets', 'collection/login/870').Introspect())
+#   b = bus.get('.secrets', 'collection/login')
+#   dir(b)
 
 
 bus = SessionBus()
 
 
 def proxy(path=None):
-    return bus.get('.secrets',  # aka org.freedesktop.secrets
-                   path)
+    return bus.get(
+        '.secrets',  # aka org.freedesktop.secrets
+        path)        # aka /org/freedesktop/secrets${path:+/$path}
 
 
 def strip_prefix(subpath: str, path: str) -> str:
@@ -86,6 +94,38 @@ class Item:
         collection_name, name = strip_prefix('collection/', path).split('/', 1)
         return Item.get(collection_name, name)
 
+    def proxy(self):
+        return proxy('collection/{}/{}'.format(
+            self.collection.name, self.name))
+
+    @property
+    def attributes(self):
+        return self.proxy().Attributes
+
+
+# Next steps:
+#
+#  - To get actual secret, need a Session.  Example:
+#      session = proxy().OpenSession('plain', Variant.new_string(''))
+#      secret = proxy('collection/login/870').GetSecret(session[1])
+#      value = ''.join(chr(i) for i in secret[2])
+#
+#  - Alternatively, see this doc for more context:
+#      https://specifications.freedesktop.org/secret-service/ch07.html
+#    So using pydbus *isn't* actually the same as using gi.repository.Secret;
+#    they both do use `gi`, but the latter is using it over libsecret (which
+#    underneath speaks DBus in a particular way), while the former is using
+#    it directly over DBus.  With libsecret, the secret would be kept in
+#    non-swappable memory (and then it'd be useful to encrypt it in transit
+#    to neutralize any swapping of intermediate buffers.)
+#
+#    Though meh, I'm then going to be doing something *with* the secret,
+#    which I won't be able to keep confined to non-swappable memory.
+#    So maybe pydbus is a perfectly fine approach.
+#
+#  - Make a little CLI, with Click or something.  Would be handy to in
+#    particular add a `print(proxy(ARG).Introspect())` command.
+
 
 def main(argv: List[str]=None):
     if argv is None:
@@ -93,11 +133,12 @@ def main(argv: List[str]=None):
 
     for c in Collection.list():
         print(c.name)
+
     print()
     for alias in ['default', 'session']:
         print('{} -> {}'.format(alias, Collection.by_alias(alias).name))
-    print()
 
+    print()
     items = Collection.get('login').items
     print('{} items; a few:'.format(len(items)))
     for item in items[:3]:
