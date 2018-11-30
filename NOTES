@@ -20,9 +20,6 @@ TODO
   which I won't be able to keep confined to non-swappable memory.
   So maybe pydbus is a perfectly fine approach.
 
-- Make a little CLI, with Click or something.  Would be handy to in
-  particular add a `print(proxy(ARG).Introspect())` command.
-
 
 UPSTREAM DOCS & NOTES
 =====================

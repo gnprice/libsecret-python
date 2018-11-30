@@ -3,12 +3,18 @@ from typing import List
 
 import click
 
-from .core import Collection
+from .core import Collection, proxy
 
 
 @click.group()
 def main():
     pass
+
+
+@main.command()
+@click.argument('path', required=False)
+def introspect(path):
+    print(proxy(path).Introspect())
 
 
 @main.group()
