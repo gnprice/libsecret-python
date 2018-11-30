@@ -96,7 +96,17 @@ class Collection:
     def create(label: str, alias: Optional[str]=None) -> str:
         properties = {'org.freedesktop.Secret.Collection.Label':
                       Variant.new_string(label)}
-        path, prompt_path = proxy().CreateCollection(properties, alias or '')
+
+        try:
+            path, prompt_path = proxy().CreateCollection(properties, alias or '')
+        except GLib.GError as e:
+            # gnome-keyring says this, with "Only the 'default' alias is supported".
+            prefix = 'GDBus.Error:org.freedesktop.DBus.Error.NotSupported: '
+            if e.message.startswith(prefix):
+                raise LibsecretError('Server error: {}'.format(
+                    e.message[len(prefix):])) from None
+            raise
+
         if path == '/':
             path = Prompt.complete(prompt_path)
         return Collection.by_path(path)

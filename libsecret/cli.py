@@ -3,7 +3,7 @@ from typing import List
 
 import click
 
-from .core import Collection, PromptDismissedError, proxy
+from .core import Collection, LibsecretError, PromptDismissedError, proxy
 
 
 @click.group()
@@ -39,6 +39,8 @@ def collection_create(label, alias):
         c = Collection.create(label, alias)
     except PromptDismissedError:
         raise click.ClickException('Prompt dismissed')
+    except LibsecretError as e:
+        raise click.ClickException(e.args[0])
     print(c.name)
 
 
