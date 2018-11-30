@@ -3,7 +3,8 @@ from typing import List
 
 import click
 
-from .core import Collection, LibsecretError, PromptDismissedError, proxy
+from .core import Collection, proxy
+from .core import LibsecretError, NotFoundError, PromptDismissedError
 
 
 @click.group()
@@ -42,6 +43,24 @@ def collection_create(label, alias):
     except LibsecretError as e:
         raise click.ClickException(e.args[0])
     print(c.name)
+
+
+@collection.command(name='delete')
+@click.argument('name', nargs=-1)
+@click.pass_context
+def collection_delete(ctx, name):
+    for name_ in name:
+        collection_delete_one(ctx, name_)
+
+def collection_delete_one(ctx, name):
+    if not click.confirm('{}: delete collection {}?'.format(
+            ctx.parent.parent.info_name, name)):
+        click.echo('Not deleted.')
+        return
+    try:
+        Collection.get(name).delete()
+    except NotFoundError:
+        raise click.ClickException('No such collection: {}'.format(name))
 
 
 @main.group()

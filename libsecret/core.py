@@ -16,6 +16,9 @@ from .windowid import active_window_id
 class LibsecretError(RuntimeError):
     pass
 
+class NotFoundError(LibsecretError):
+    pass
+
 class PromptDismissedError(LibsecretError):
     pass
 
@@ -146,6 +149,14 @@ class Collection:
     @property
     def items(self) -> List['Item']:
         return [Item.by_path(path) for path in self.proxy().Items]
+
+    def delete(self) -> None:
+        try:
+            prompt_path = self.proxy().Delete()
+        except KeyError:
+            raise NotFoundError() from None
+        if prompt_path != '/':
+            Prompt.complete(prompt_path)
 
 
 T_Item = TypeVar('T_Item', bound='Item')
