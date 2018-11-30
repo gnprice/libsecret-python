@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 import re
-from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, List, Optional, Tuple
 
 from gi.repository import Gio, GLib
 from pydbus import SessionBus, Variant
@@ -108,8 +108,6 @@ class Prompt:
         return result
 
 
-T_Collection = TypeVar('T_Collection', bound='Collection')
-
 class Collection:
     def __init__(self, name: str) -> None:
         self.name = name
@@ -164,8 +162,6 @@ class Collection:
         if prompt_path != '/':
             Prompt.complete(prompt_path)
 
-
-T_Item = TypeVar('T_Item', bound='Item')
 
 class Item:
     def __init__(self, collection: Collection, name: str) -> None:
