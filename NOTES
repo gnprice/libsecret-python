@@ -90,10 +90,41 @@ Hmm, it looks like when I'm prompted to unlock a keyring, the
 I have to take care to uncheck it before hitting enter if I want to
 avoid enabling that.
 
-I think I can see why the author might have made that choice by
-default; but I'd really like to be able to turn it off.
+It's understandable why the author might have been inclined to point
+the default in that direction -- the vast majority of users only ever
+complain about these things when the keyring *doesn't* get
+automatically unlocked, so they keep getting prompted for it.  But
+nevertheless it seems like clearly the wrong behavior.  Partly because
+of the steep asymmetry in consequences:
+  * if it starts out unchecked and you hastily submit when you'd
+    have liked to check it, the worst thing that happens is that you'll
+    see the dialog box again;
+  * in the reverse case, you may compromise the security of
+    important secrets you've specifically tried to protect.
 
-Here's an illuminating old bug in that prompt (from 2011-02):
+In any case, whatever the merits of this as a broad default, I
+certainly want to turn it off for my specialized use cases.
+
+Bug threads:
+
+  https://gitlab.gnome.org/GNOME/seahorse/issues/101
+  aka https://bugzilla.gnome.org/show_bug.cgi?id=725641
+    (2014-03-04; discussion, even a patch 2016-02-01, though I don't
+     entirely see why that patch is the right fix)
+  https://bugzilla.gnome.org/show_bug.cgi?id=576676
+    (2009-03-25! author replied; report wasn't very clearly framed,
+     though, and I'm not sure there was a meeting of the minds)
+
+  and dupes:
+  https://bugs.launchpad.net/ubuntu/+source/seahorse/+bug/1731757
+    (2017-11-12; no reply)
+  https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=848902
+    (2016-12-20; no reply)
+  https://bugzilla.gnome.org/show_bug.cgi?id=740734
+    (2014-11-26)
+
+
+Here's an illuminating old bug in that prompt's code (from 2011-02):
   https://bugzilla.gnome.org/show_bug.cgi?id=642001
     and its fix: https://gitlab.gnome.org/GNOME/gnome-keyring/commit/e826634d
 
