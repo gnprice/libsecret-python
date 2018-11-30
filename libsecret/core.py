@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import re
 from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar
 
@@ -35,6 +36,17 @@ def strip_prefix(subpath: str, path: str) -> str:
     if not path.startswith(prefix):
         raise RuntimeError('unexpected path: {}'.format(path))
     return path[len(prefix):]
+
+
+@contextmanager
+def expect_error(prefix: str, fmt: str='Server error: {}'):
+    try:
+        yield
+    except GLib.GError as e:
+        if e.message.startswith(prefix):
+            message = fmt.format(e.message[len(prefix):])
+            raise LibsecretError(message) from None
+        raise    
 
 
 _main_loop = GLib.MainLoop()
@@ -96,17 +108,9 @@ class Collection:
     def create(label: str, alias: Optional[str]=None) -> str:
         properties = {'org.freedesktop.Secret.Collection.Label':
                       Variant.new_string(label)}
-
-        try:
+        # gnome-keyring can raise this, with "Only the 'default' alias is supported".
+        with expect_error('GDBus.Error:org.freedesktop.DBus.Error.NotSupported: '):
             path, prompt_path = proxy().CreateCollection(properties, alias or '')
-        except GLib.GError as e:
-            # gnome-keyring says this, with "Only the 'default' alias is supported".
-            prefix = 'GDBus.Error:org.freedesktop.DBus.Error.NotSupported: '
-            if e.message.startswith(prefix):
-                raise LibsecretError('Server error: {}'.format(
-                    e.message[len(prefix):])) from None
-            raise
-
         if path == '/':
             path = Prompt.complete(prompt_path)
         return Collection.by_path(path)
