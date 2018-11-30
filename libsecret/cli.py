@@ -46,15 +46,18 @@ def collection_create(label, alias):
 
 
 @collection.command(name='delete')
-@click.option('-f/-i', '--force/ ', default=False)
+@click.option('-i', '--interactive', flag_value='i', default=True)
+@click.option('-f', '--force', 'interactive', flag_value='')
 @click.argument('name', nargs=-1)
 @click.pass_context
-def collection_delete(ctx, force, name):
+def collection_delete(ctx, interactive, name):
+    # Using actual True/False for flag_value misbehaves; winds up always False!
+    interactive = bool(interactive)
     for name_ in name:
-        collection_delete_one(ctx, force, name_)
+        collection_delete_one(ctx, interactive, name_)
 
-def collection_delete_one(ctx, force, name):
-    if not force:
+def collection_delete_one(ctx, interactive, name):
+    if interactive:
         if not click.confirm('{}: delete collection {}?'.format(
                 ctx.parent.parent.info_name, name)):
             click.echo('Not deleted.')
