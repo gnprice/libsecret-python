@@ -6,17 +6,40 @@ import click
 from .core import Collection
 
 
-@click.command()
+@click.group()
 def main():
+    pass
+
+
+@main.group()
+def collection():
+    pass
+
+
+@collection.command(name='list')
+def collection_list():
     for c in Collection.list():
         print(c.name)
 
-    print()
-    for alias in ['default', 'session']:
-        print('{} -> {}'.format(alias, Collection.by_alias(alias).name))
 
-    print()
-    items = Collection.get('login').items
-    print('{} items; a few:'.format(len(items)))
-    for item in items[:3]:
-        print('  {}'.format(item.name))
+@main.group()
+def alias():
+    pass
+
+
+@alias.command(name='get')
+@click.argument('name')
+def alias_get(name):
+    print(Collection.by_alias(name).name)
+
+
+@main.command()
+@click.option('--collection')
+def search(collection):
+    if collection is None:
+        # later, this is one of several alternatives
+        raise click.UsageError('search requires --collection')
+
+    items = Collection.get(collection).items
+    for item in items:
+        print(item.name)
