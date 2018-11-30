@@ -74,3 +74,33 @@ and other config:
   https://lists.freedesktop.org/archives/authentication/2013-May/000267.html
 Doesn't appear to have led to any concrete implementation, though; I
 believe that's one of the last things he did before moving to other projects.
+
+
+Trouble/confusion related to default keyring:
+  https://forum.mxlinux.org/viewtopic.php?p=461934#p461934
+  (thread is live as recently as 2018-11-27!)
+
+
+Detailed notes from a frustrated sysadmin:
+  https://nurdletech.com/linux-notes/agents/keyring.html
+
+
+Hmm, it looks like when I'm prompted to unlock a keyring, the
+"Automatically unlock whenever I’m logged in" checkbox is default-on!
+I have to take care to uncheck it before hitting enter if I want to
+avoid enabling that.
+
+I think I can see why the author might have made that choice by
+default; but I'd really like to be able to turn it off.
+
+Here's an illuminating old bug in that prompt (from 2011-02):
+  https://bugzilla.gnome.org/show_bug.cgi?id=642001
+    and its fix: https://gitlab.gnome.org/GNOME/gnome-keyring/commit/e826634d
+
+  Code first implemented, 2010-06-12: 9285289d7
+  and major other parts, 2010-06-05: bf0d4ea4f
+
+This code isn't changing much these days.  That file (1662 lines of C)
+has not been touched since 2016-10-18; the last change that wasn't to
+message strings was 2014-11-13; and the last significant change was
+2011-12-19.  (By commit date; author dates are days to months earlier.)
