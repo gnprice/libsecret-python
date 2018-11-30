@@ -48,20 +48,26 @@ def collection_create(label, alias):
 @collection.command(name='delete')
 @click.option('-i', '--interactive', flag_value='i', default=True)
 @click.option('-f', '--force', 'interactive', flag_value='')
-@click.argument('name', nargs=-1)
+@click.argument('names', nargs=-1)
 @click.pass_context
-def collection_delete(ctx, interactive, name):
+def collection_delete(ctx, interactive, names):
+    if not names:
+        return
     # Using actual True/False for flag_value misbehaves; winds up always False!
-    interactive = bool(interactive)
-    for name_ in name:
-        collection_delete_one(ctx, interactive, name_)
-
-def collection_delete_one(ctx, interactive, name):
-    if interactive:
-        if not click.confirm('{}: delete collection {}?'.format(
-                ctx.parent.parent.info_name, name)):
-            click.echo('Not deleted.')
+    if bool(interactive):
+        info_fullname = '{} {} {}'.format(
+            ctx.parent.parent.info_name, ctx.parent.info_name, ctx.info_name)
+        question = '\n'.join([
+            '{}:'.format(info_fullname),
+            '  {}'.format(' '.join(names)),
+            'Really delete these collections?'])
+        if not click.confirm(question):
+            click.echo('Nothing deleted.')
             return
+    for name in names:
+        collection_delete_one(name)
+
+def collection_delete_one(name):
     try:
         Collection.get(name).delete()
     except NotFoundError:
