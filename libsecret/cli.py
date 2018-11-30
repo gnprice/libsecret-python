@@ -14,7 +14,10 @@ def main():
 @main.command()
 @click.argument('path', required=False)
 def introspect(path):
-    print(proxy(path).Introspect())
+    try:
+        print(proxy(path).Introspect())
+    except KeyError:
+        sys.exit(1)
 
 
 @main.group()
