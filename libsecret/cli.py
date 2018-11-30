@@ -1,13 +1,13 @@
 import sys
 from typing import List
 
+import click
+
 from .core import Collection
 
 
-def main(argv: List[str]=None):
-    if argv is None:
-        argv = sys.argv[1:]
-
+@click.command()
+def main():
     for c in Collection.list():
         print(c.name)
 
