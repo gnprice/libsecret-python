@@ -2,7 +2,7 @@ from contextlib import contextmanager
 import re
 from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar
 
-from gi.repository import GLib
+from gi.repository import Gio, GLib
 from pydbus import SessionBus, Variant
 
 from .windowid import active_window_id
@@ -39,12 +39,37 @@ def strip_prefix(subpath: str, path: str) -> str:
 
 
 @contextmanager
-def expect_error(prefix: str, fmt: str='Server error: {}'):
+def expect_error(domain: str, code: 'gobject.GEnum', fmt: str='Server error: {}'):
     try:
         yield
     except GLib.GError as e:
-        if e.message.startswith(prefix):
-            message = fmt.format(e.message[len(prefix):])
+        # Background doc:
+        #   https://developer.gnome.org/glib/stable/glib-Error-Reporting.html
+        # Errors have a domain, a code, and a message.
+        #
+        # When the error gets to us here in Python, it looks like
+        #    e.domain == 'g-dbus-error-quark'
+        #    e.code == 7
+        #    e.message == ("GDBus.Error:org.freedesktop.DBus.Error.NotSupported:"
+        #                 +" Only the 'default' alias is supported")
+        #
+        # "Quark" basically means enum; see:
+        #    https://developer.gnome.org/glib/stable/glib-Quarks.html
+        # So this is "error 7 in the GDBus error enum".  And indeed,
+        #    Gio.DBusError(7) == Gio.DBusError.NOT_SUPPORTED
+        #
+        # Awkward that the domain and code have been effectively
+        # pre-stuffed into the message.  I believe this is DBus's doing,
+        # and that this is why the C API docs say to call g_dbus_error_strip_remote_error:
+        #    https://developer.gnome.org/gio/stable/gio-GDBusError.html
+        # But Gio.DBusError.strip_remote_error seems to have no effect;
+        # perhaps because it's written as a mutator, and the bindings
+        # let it mutate a throwaway copy.
+        if e.domain == domain and e.code == code:
+            # Cf g_dbus_error_strip_remote_error:
+            #   https://gitlab.gnome.org/GNOME/glib/blob/2.56.1/gio/gdbuserror.c#L760
+            # (thanks, "source" link in the lazka.github.io PyGObject docs!)
+            message = re.sub('^ .*? : .*? : \ ', '', e.message, flags=re.X)
             raise LibsecretError(message) from None
         raise    
 
@@ -109,7 +134,7 @@ class Collection:
         properties = {'org.freedesktop.Secret.Collection.Label':
                       Variant.new_string(label)}
         # gnome-keyring can raise this, with "Only the 'default' alias is supported".
-        with expect_error('GDBus.Error:org.freedesktop.DBus.Error.NotSupported: '):
+        with expect_error('g-dbus-error-quark', Gio.DBusError.NOT_SUPPORTED):
             path, prompt_path = proxy().CreateCollection(properties, alias or '')
         if path == '/':
             path = Prompt.complete(prompt_path)
