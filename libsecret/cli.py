@@ -46,17 +46,19 @@ def collection_create(label, alias):
 
 
 @collection.command(name='delete')
+@click.option('-f/-i', '--force/ ', default=False)
 @click.argument('name', nargs=-1)
 @click.pass_context
-def collection_delete(ctx, name):
+def collection_delete(ctx, force, name):
     for name_ in name:
-        collection_delete_one(ctx, name_)
+        collection_delete_one(ctx, force, name_)
 
-def collection_delete_one(ctx, name):
-    if not click.confirm('{}: delete collection {}?'.format(
-            ctx.parent.parent.info_name, name)):
-        click.echo('Not deleted.')
-        return
+def collection_delete_one(ctx, force, name):
+    if not force:
+        if not click.confirm('{}: delete collection {}?'.format(
+                ctx.parent.parent.info_name, name)):
+            click.echo('Not deleted.')
+            return
     try:
         Collection.get(name).delete()
     except NotFoundError:
