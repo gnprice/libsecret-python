@@ -75,8 +75,8 @@ def expect_error(domain: str, code: 'gobject.GEnum', fmt: str='Server error: {}'
             # Cf g_dbus_error_strip_remote_error:
             #   https://gitlab.gnome.org/GNOME/glib/blob/2.56.1/gio/gdbuserror.c#L760
             # (thanks, "source" link in the lazka.github.io PyGObject docs!)
-            message = re.sub('^ .*? : .*? : \ ', '', e.message, flags=re.X)
-            raise LibsecretError(message) from None
+            remote_message = re.sub('^ .*? : .*? : \ ', '', e.message, flags=re.X)
+            raise LibsecretError(fmt.format(remote_message)) from None
         raise    
 
 
