@@ -19,6 +19,42 @@ from pydbus import SessionBus
 #   b = bus.get('.secrets', 'collection/login')
 #   dir(b)
 
+# Helpful background for understanding the API:
+#
+#   Aliases:
+#     https://lists.freedesktop.org/archives/authentication/2010-September/000166.html
+#   Alias paths, a bit in the spec that got taken out of the implementation, AFAICT:
+#     https://lists.freedesktop.org/archives/authentication/2009-December/000141.html
+#   Session encryption:
+#     https://lists.freedesktop.org/archives/authentication/2010-September/000172.html
+#   Properties named by full names:
+#     https://lists.freedesktop.org/archives/authentication/2011-March/000226.html
+#   When the spec got officially published (albeit as a draft):
+#     https://lists.freedesktop.org/archives/authentication/2011-April/000234.html
+
+# Reading still to do:
+#   https://wiki.gnome.org/Projects/GnomeKeyring/Architecture
+#   https://wiki.gnome.org/Projects/GnomeKeyring/Pam (about auto-unlock)
+#   https://wiki.gnome.org/Projects/GnomeKeyring/Goals
+#
+# Oh hmm interesting:
+#
+#   > A keyring can be configured to be locked automatically after a
+#   > period of inactivity (This isn't actually implemented yet but is
+#   > coming soon)
+#
+#   https://gitlab.gnome.org/GNOME/gnome-keyring/blob/master/docs/keyring-intro.txt
+#   last edited 2011-09-15
+#
+# Guess if we want to re-lock a keyring, we'll have to hack a way to
+# do it ourselves.  E.g., `echo 'libsecret lock ...' | at 'now + 2 min'`.
+#
+# Also, some thoughts from the gnome-keyring author (and main author of
+# the Secret Service API) specifically about applications storing secrets
+# and other config:
+#   https://lists.freedesktop.org/archives/authentication/2013-May/000267.html
+# Doesn't appear to have led to any concrete implementation, though; I
+# believe that's one of the last things he did before moving to other projects.
 
 bus = SessionBus()
 
