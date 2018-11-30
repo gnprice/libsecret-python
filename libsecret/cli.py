@@ -3,7 +3,7 @@ from typing import List
 
 import click
 
-from .core import Collection, proxy
+from .core import Collection, PromptDismissedError, proxy
 
 
 @click.group()
@@ -29,6 +29,17 @@ def collection():
 def collection_list():
     for c in Collection.list():
         print(c.name)
+
+
+@collection.command(name='create')
+@click.argument('label')
+@click.argument('alias', required=False)
+def collection_create(label, alias):
+    try:
+        c = Collection.create(label, alias)
+    except PromptDismissedError:
+        raise click.ClickException('Prompt dismissed')
+    print(c.name)
 
 
 @main.group()

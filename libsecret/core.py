@@ -12,6 +12,13 @@ from .windowid import active_window_id
 # TODO ideas are in NOTES.
 
 
+class LibsecretError(RuntimeError):
+    pass
+
+class PromptDismissedError(LibsecretError):
+    pass
+
+
 bus = SessionBus()
 
 
@@ -54,7 +61,7 @@ class Prompt:
         window_id = active_window_id()
         dismissed, result = rpc(prompt_path, lambda p: p.Prompt(window_id))
         if dismissed:
-            raise RuntimeError('Prompt dismissed')
+            raise PromptDismissedError()
         return result
 
 
@@ -89,10 +96,10 @@ class Collection:
     def create(label: str, alias: Optional[str]=None) -> str:
         properties = {'org.freedesktop.Secret.Collection.Label':
                       Variant.new_string(label)}
-        result, prompt_path = proxy().CreateCollection(properties, alias or '')
-        if result != '/':
-            return result
-        return Prompt.complete(prompt_path)
+        path, prompt_path = proxy().CreateCollection(properties, alias or '')
+        if path == '/':
+            path = Prompt.complete(prompt_path)
+        return Collection.by_path(path)
 
     def proxy(self):
         return proxy('collection/{}'.format(self.name))
