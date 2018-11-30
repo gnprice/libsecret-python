@@ -19,6 +19,9 @@ class LibsecretError(RuntimeError):
 class NotFoundError(LibsecretError):
     pass
 
+class BadObjectPathError(LibsecretError):
+    pass
+
 class PromptDismissedError(LibsecretError):
     pass
 
@@ -37,7 +40,7 @@ def proxy(path: Optional[str]=None) -> ProxyT:
 def strip_prefix(subpath: str, path: str) -> str:
     prefix = '/org/freedesktop/secrets/' + subpath
     if not path.startswith(prefix):
-        raise RuntimeError('unexpected path: {}'.format(path))
+        raise BadObjectPathError('unexpected path: {}'.format(path))
     return path[len(prefix):]
 
 
@@ -126,7 +129,10 @@ class Collection:
 
     @staticmethod
     def by_alias(alias: str) -> Optional['Collection']:
-        return Collection.by_path(proxy().ReadAlias(alias))
+        path = proxy().ReadAlias(alias)
+        if path == '/':
+            raise NotFoundError()
+        return Collection.by_path(path)
 
     @staticmethod
     def list() -> List['Collection']:

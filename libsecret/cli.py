@@ -82,7 +82,11 @@ def alias():
 @alias.command(name='get')
 @click.argument('name')
 def alias_get(name):
-    print(Collection.by_alias(name).name)
+    try:
+        collection = Collection.by_alias(name)
+    except NotFoundError:
+        raise click.ClickException('No such alias: {}'.format(name))
+    print(collection.name)
 
 
 @main.command()
